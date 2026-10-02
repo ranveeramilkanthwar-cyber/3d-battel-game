@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gargoyle's Keep: Soulwarden — 3D Gothic Tower Defense</title>
+    <meta name="description" content="A lovable, atmospheric 3D Gothic Dark Fantasy Tower Defense game built with Three.js. Defend the Soul Hearth with grumpy gargoyles, bubbling cauldrons, and eldritch spells across multiple realms!" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@600;700;800;900&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="game-container">
+      <!-- 3D Canvas Mount -->
+      <canvas id="webgl-canvas"></canvas>
+
+      <!-- Atmospheric Fog & Vignette Overlay -->
+      <div class="vignette-overlay" id="vignette-overlay"></div>
+
+      <!-- Top HUD Header -->
+      <header id="top-hud">
+        <div class="hud-left">
+          <!-- Sanctum Castle Health & Lives -->
+          <div class="sanctum-health-badge" id="health-badge" title="Citadel Lives & Sacred Health">
+            <span class="badge-icon">🏰</span>
+            <div class="health-meta">
+              <div class="health-label-row">
+                <span class="health-label">CITADEL LIVES</span>
+                <span id="hearts-display" class="hearts-display">❤️❤️❤️❤️❤️</span>
+              </div>
+              <div class="health-bar-track">
+                <div class="health-bar-fill" id="health-bar-fill" style="width: 100%;"></div>
+              </div>
+            </div>
+            <span class="health-value" id="health-text">20 / 20 HP</span>
+          </div>
+
+          <!-- Currencies -->
+          <div class="currency-group">
+            <div class="currency-badge gold-badge" id="gold-badge" title="Crypt Gold">
+              <span class="badge-icon">🪙</span>
+              <span class="currency-amount" id="gold-amount">175</span>
+            </div>
+            <div class="currency-badge soul-badge" id="soul-badge" title="Soul Essence">
+              <span class="badge-icon">👻</span>
+              <span class="currency-amount" id="soul-amount">45</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center: Level & Wave Tracker -->
+        <div class="hud-center">
+          <div class="level-wave-panel">
+            <div class="level-badge" id="level-badge" title="Click to open Levels & Realm Portal">
+              <span class="level-tag" id="level-tag">LEVEL 1</span>
+              <span class="realm-name" id="realm-name">Gloomstone Graveyard</span>
+              <span class="theme-pill" id="theme-pill">GOTHIC</span>
+            </div>
+            <!-- Active Realm Mutator Pill -->
+            <div class="mutator-hud-pill" id="mutator-hud-pill" title="Active Realm Mutator & Modifiers">
+              <span id="mutator-icon">🌌</span>
+              <span id="mutator-text">Standard Night</span>
+            </div>
+            <div class="wave-tracker" id="wave-tracker">
+              <h2 class="wave-title" id="wave-title">WAVE 1 <span class="wave-max">/ 5</span></h2>
+              <div class="wave-progress-container">
+                <div class="wave-progress-bar" id="wave-progress-bar"></div>
+              </div>
+              <span class="enemy-count" id="enemy-count-text">Ready for Nightfall</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Action Controls & Real-Game Sections -->
+        <div class="hud-right">
+          <div class="controls-group">
+            <button id="btn-start-wave" class="btn-action primary-glow" title="Summon Next Wave (Spacebar)">
+              <span class="btn-icon">⚔️</span>
+              <span class="btn-text">UNLEASH WAVE</span>
+            </button>
+            <div class="speed-toggle-group">
+              <button id="btn-speed-1x" class="btn-speed active" title="1x Speed">1x</button>
+              <button id="btn-speed-2x" class="btn-speed" title="2x Speed">2x</button>
+              <button id="btn-speed-4x" class="btn-speed" title="4x Speed">4x</button>
+            </div>
+
+            <!-- Levels & Endless Spire Realm Portal Button -->
+            <button id="btn-open-levels" class="btn-action levels-btn" title="Endless Spire & Realm Levels Portal [L]">
+              <span>🗺️ Levels <span id="levels-stars-badge" class="stars-counter-badge">⭐ 0</span></span>
+            </button>
+
+            <!-- Light / Dark Theme Toggle -->
+            <button id="btn-theme-toggle" class="btn-action theme-toggle-btn" title="Toggle Light / Dark Celestial Dawn Theme">
+              <span id="theme-btn-icon">☀️ Light</span>
+            </button>
+
+            <!-- Real-Game Feature Buttons -->
+            <button id="btn-open-forge" class="btn-action forge-btn" title="Soul Forge Permanent Upgrades">
+              <span>⚒️ Forge</span>
+            </button>
+            <button id="btn-open-codex" class="btn-action codex-btn" title="Heroes & Bestiary Characters Section">
+              <span>📖 Codex</span>
+            </button>
+            <button id="btn-open-quests" class="btn-action quest-btn" title="Quests & Bounties">
+              <span>🏆 Quests <span id="quest-alert-badge" class="quest-alert-badge hidden">!</span></span>
+            </button>
+
+            <button id="btn-open-tutorial" class="btn-icon-only tutorial-btn" title="Open Interactive Game Tutorial">
+              <span>❓</span>
+            </button>
+            <button id="btn-audio-toggle" class="btn-icon-only" title="Toggle Sound / Music">
+              <span id="audio-icon">🔊</span>
+            </button>
+            <button id="btn-help" class="btn-icon-only" title="Grimoire / Guide">
+              <span>📜</span>
+            </button>
+            <button id="btn-reset-cam" class="btn-icon-only" title="Reset 3D Camera View">
+              <span>🎯</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- God Ritual Spells Bar (Left Aside) -->
+      <aside id="spells-bar">
+        <div class="spells-title">RITUALS</div>
+        <div class="spell-buttons-container">
+          <button class="spell-btn" id="spell-meteor" data-spell="meteor" title="[1] Eldritch Meteor: Rain blazing star upon target">
+            <div class="spell-key">[1]</div>
+            <div class="spell-icon">☄️</div>
+            <div class="spell-info">
+              <span class="spell-name">Meteor</span>
+              <span class="spell-cost" id="cost-meteor">20 👻</span>
+            </div>
+            <div class="spell-cooldown-overlay" id="cd-meteor"></div>
+          </button>
+
+          <button class="spell-btn" id="spell-freeze" data-spell="freeze" title="[2] Frost Nova: Freeze all monsters for 4s">
+            <div class="spell-key">[2]</div>
+            <div class="spell-icon">❄️</div>
+            <div class="spell-info">
+              <span class="spell-name">Frost Nova</span>
+              <span class="spell-cost" id="cost-freeze">25 👻</span>
+            </div>
+            <div class="spell-cooldown-overlay" id="cd-freeze"></div>
+          </button>
+
+          <button class="spell-btn" id="spell-frenzy" data-spell="frenzy" title="[3] Blood Moon: Double attack speed for all towers for 7s">
+            <div class="spell-key">[3]</div>
+            <div class="spell-icon">🌕</div>
+            <div class="spell-info">
+              <span class="spell-name">Blood Moon</span>
+              <span class="spell-cost" id="cost-frenzy">30 👻</span>
+            </div>
+            <div class="spell-cooldown-overlay" id="cd-frenzy"></div>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Sleek Compact Weapon Icon Dock ("Weapon Icon Only of Adding") -->
+      <footer id="weapon-icon-dock">
+        <div class="dock-handle-bar">
+          <span class="dock-caption">ADD DEFENDERS</span>
+          <span class="dock-keys-hint">Click weapon icon or press [Q, W, E, R], then click a stone pedestal</span>
+        </div>
+        <div class="weapon-icons-tray" id="weapon-icons-tray">
+          <!-- Weapon 1: Gargoyle -->
+          <div class="weapon-icon-btn" id="wpn-gargoyle" data-type="gargoyle" data-hotkey="Q">
+            <div class="weapon-add-badge">+</div>
+            <div class="weapon-glyph">🗿</div>
+            <div class="weapon-price">70 🪙</div>
+            <div class="weapon-hotkey">[Q]</div>
+            <div class="weapon-tooltip">
+              <div class="tooltip-title">Grumpy Gargoyle</div>
+              <div class="tooltip-type">Single-Target Fire</div>
+              <div class="tooltip-desc">Spits molten brimstone at foes. High single-target DPS.</div>
+              <div class="tooltip-stats">💥 26 Dmg • 🎯 3.6 Rng • ⚡ 0.85s</div>
+            </div>
+          </div>
+
+          <!-- Weapon 2: Cauldron -->
+          <div class="weapon-icon-btn" id="wpn-cauldron" data-type="cauldron" data-hotkey="W">
+            <div class="weapon-add-badge">+</div>
+            <div class="weapon-glyph">🧪</div>
+            <div class="weapon-price">90 🪙</div>
+            <div class="weapon-hotkey">[W]</div>
+            <div class="weapon-tooltip">
+              <div class="tooltip-title">Witch's Cauldron</div>
+              <div class="tooltip-type">AoE Slime Splash</div>
+              <div class="tooltip-desc">Hurls toxic stew that coats the ground, damaging and slowing enemies by 45%.</div>
+              <div class="tooltip-stats">💥 18 AoE • 🎯 2.8 Rng • 🐌 Slow</div>
+            </div>
+          </div>
+
+          <!-- Weapon 3: Crypt -->
+          <div class="weapon-icon-btn" id="wpn-crypt" data-type="crypt" data-hotkey="E">
+            <div class="weapon-add-badge">+</div>
+            <div class="weapon-glyph">🏛️</div>
+            <div class="weapon-price">110 🪙</div>
+            <div class="weapon-hotkey">[E]</div>
+            <div class="weapon-tooltip">
+              <div class="tooltip-title">Spectral Crypt</div>
+              <div class="tooltip-type">Rapid Soul Striker</div>
+              <div class="tooltip-desc">Channels lantern spirits that attack swiftly and harvest bonus soul essence.</div>
+              <div class="tooltip-stats">💥 14 Dmg • 🎯 3.2 Rng • 👻 Extra Souls</div>
+            </div>
+          </div>
+
+          <!-- Weapon 4: Tesla -->
+          <div class="weapon-icon-btn" id="wpn-tesla" data-type="tesla" data-hotkey="R">
+            <div class="weapon-add-badge">+</div>
+            <div class="weapon-glyph">⚡</div>
+            <div class="weapon-price">135 🪙</div>
+            <div class="weapon-hotkey">[R]</div>
+            <div class="weapon-tooltip">
+              <div class="tooltip-title">Eldritch Monolith</div>
+              <div class="tooltip-type">Chain Lightning Arc</div>
+              <div class="tooltip-desc">Discharges purple lightning arcs jumping between up to 4 targets simultaneously.</div>
+              <div class="tooltip-stats">💥 34 Dmg • 🎯 4.2 Rng • ⚡ Chain x4</div>
+            </div>
+          </div>
+
+          <!-- DOCK BLUE UPGRADE BUTTON ("upgrade card should be opened on click on below blue icon") -->
+          <div class="dock-action-btn upgrade-dock-btn" id="dock-btn-upgrade" title="Inspect & Upgrade Placed Defenders [U]">
+            <div class="action-glow-ring"></div>
+            <div class="weapon-glyph blue-glyph">⚡</div>
+            <div class="dock-btn-title">UPGRADE</div>
+            <div class="weapon-hotkey">[U]</div>
+            <div class="weapon-tooltip">
+              <div class="tooltip-title">Defender Upgrades</div>
+              <div class="tooltip-type" style="color:#38bdf8;">Rank Evolution [U]</div>
+              <div class="tooltip-desc">Click to inspect and upgrade your placed defenders or power up Sanctum Mastery!</div>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      <!-- Interactive Starting Tutorial Overlay Card (Positioned top-right side) -->
+      <div id="tutorial-overlay" class="hidden">
+        <button id="tut-close" class="close-btn" title="Skip Tutorial">&times;</button>
+        <div class="tut-header">
+          <span class="tut-badge">TUTORIAL</span>
+          <h3 id="tut-step-title">1. Protect The Soul Hearth</h3>
+          <span class="tut-step-count" id="tut-step-count">Step 1 of 4</span>
+        </div>
+        <div class="tut-body">
+          <div class="tut-illustration" id="tut-illustration">💖</div>
+          <p id="tut-step-desc">
+            Your sacred blue flame protects this realm from eternal darkness. Monsters follow the stone paths to extinguish it. If your Hearth HP drops to 0, the domain falls!
+          </p>
+          <div class="tut-hint-pill" id="tut-hint-pill">
+            💡 Pro-Tip: Defeat horrors before they reach the central glowing brazier!
+          </div>
+        </div>
+        <div class="tut-footer">
+          <div class="tut-dots">
+            <span class="tut-dot active" data-step="0"></span>
+            <span class="tut-dot" data-step="1"></span>
+            <span class="tut-dot" data-step="2"></span>
+            <span class="tut-dot" data-step="3"></span>
+          </div>
+          <div class="tut-buttons">
+            <button id="tut-btn-skip" class="btn-action secondary-glow">SKIP</button>
+            <button id="tut-btn-next" class="btn-action primary-glow">NEXT ▶</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tower Inspection Drawer (Positioned top-right side) -->
+      <div id="inspector-panel" class="hidden">
+        <button id="inspector-close" class="close-btn" title="Close Panel">&times;</button>
+        <div class="inspector-header">
+          <div class="inspector-portrait" id="inspector-portrait">🗿</div>
+          <div class="inspector-title-group">
+            <h3 class="inspector-name" id="inspector-name">The Grumpy Gargoyle</h3>
+            <span class="inspector-tier" id="inspector-tier">Rank 1 Sentinel</span>
+          </div>
+        </div>
+
+        <div class="inspector-lore" id="inspector-lore">
+          "A stubborn stone watcher carved three centuries ago. Grunts when woke, but spits hellfire at intruders."
+        </div>
+
+        <div class="inspector-stats-grid">
+          <div class="stat-box">
+            <span class="stat-lbl">Damage</span>
+            <span class="stat-val" id="stat-dmg">26</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-lbl">Range</span>
+            <span class="stat-val" id="stat-rng">3.6</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-lbl">Speed</span>
+            <span class="stat-val" id="stat-spd">0.85s</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-lbl">Kills</span>
+            <span class="stat-val highlight" id="stat-kills">0</span>
+          </div>
+        </div>
+
+        <div class="inspector-actions">
+          <button id="btn-poke-tower" class="btn-action secondary-glow" title="Interact with this defender!">
+            <span>👋</span> Pet Defender
+          </button>
+          <button id="btn-upgrade-tower" class="btn-action upgrade-glow">
+            <span id="upgrade-btn-text">Upgrade (Rank 2)</span>
+            <span class="cost" id="upgrade-cost-tag">65 🪙</span>
+          </button>
+          <button id="btn-sell-tower" class="btn-action sell-btn">
+            <span>♻️</span> Sell (+<span id="sell-value">35</span> 🪙)
+          </button>
+        </div>
+      </div>
+
+      <!-- Floating Alerts Container -->
+      <div id="floating-notifications"></div>
+
+      <!-- ====================================================================
+           MODAL 1: SOUL FORGE (PERMANENT UPGRADES SECTION)
+           ==================================================================== -->
+      <div id="modal-soul-forge" class="modal-backdrop hidden">
+        <div class="modal-dialog forge-dialog">
+          <div class="modal-header">
+            <h2>⚒️ The Soul Forge: Mastery Upgrades</h2>
+            <button class="modal-close" id="modal-forge-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="forge-meta-bar">
+              <span>Spend harvested <strong>Soul Essence</strong> to permanently empower your realm defenses!</span>
+              <div class="currency-badge soul-badge"><span class="badge-icon">👻</span> <span id="forge-souls-avail">45</span></div>
+            </div>
+            <div class="forge-upgrades-grid" id="forge-upgrades-grid">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-action primary-glow" id="btn-close-forge">CLOSE FORGE</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================================
+           MODAL 2: HEROES & BESTIARY CODEX (CHARACTER SECTION)
+           ==================================================================== -->
+      <div id="modal-codex" class="modal-backdrop hidden">
+        <div class="modal-dialog codex-dialog">
+          <div class="modal-header">
+            <h2>📖 Arcane Codex: Heroes & Bestiary</h2>
+            <button class="modal-close" id="modal-codex-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <!-- Tabs -->
+            <div class="codex-tabs-bar">
+              <button class="codex-tab active" id="tab-defenders">🛡️ Defenders (4)</button>
+              <button class="codex-tab" id="tab-enemies">💀 Monsters Bestiary (9)</button>
+            </div>
+            <!-- Tab Contents -->
+            <div class="codex-tab-content" id="codex-content">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-action primary-glow" id="btn-close-codex">RETURN TO BATTLE</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================================
+           MODAL 3: QUESTS & BOUNTIES
+           ==================================================================== -->
+      <div id="modal-quests" class="modal-backdrop hidden">
+        <div class="modal-dialog quests-dialog">
+          <div class="modal-header">
+            <h2>🏆 Quests & Bounties</h2>
+            <button class="modal-close" id="modal-quests-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p>Complete sanctuary challenges to claim Crypt Gold and Soul Essence rewards!</p>
+            <div class="quests-list" id="quests-list">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-action primary-glow" id="btn-close-quests">CONTINUE</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================================
+           MODAL 4: REALM PORTAL & ENDLESS SPIRE (LEVELS SECTION)
+           ==================================================================== -->
+      <div id="modal-levels" class="modal-backdrop hidden">
+        <div class="modal-dialog levels-dialog">
+          <div class="modal-header">
+            <div class="modal-header-title">
+              <h2>🗺️ Realm Portal: Infinite Spire & Levels</h2>
+              <div class="levels-summary-bar">
+                <span class="levels-stars-total" id="portal-stars-total">⭐ 0 Total Stars</span>
+                <span class="levels-max-unlocked" id="portal-max-level">Highest Reached: Level 1</span>
+              </div>
+            </div>
+            <button class="modal-close" id="modal-levels-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <!-- Realm Navigation Tabs -->
+            <div class="levels-tabs-bar">
+              <button class="levels-tab active" id="tab-lvl-campaign">🏛️ Campaign (1 - 4)</button>
+              <button class="levels-tab" id="tab-lvl-endless">🌀 Endless Spire (5 - ∞)</button>
+              <button class="levels-tab" id="tab-lvl-milestones">⭐ Star Milestones</button>
+              <button class="levels-tab" id="tab-lvl-challenges">⚡ Challenge Modifiers</button>
+            </div>
+
+            <!-- Tab Content 1: Campaign Realms -->
+            <div class="levels-tab-pane" id="pane-lvl-campaign">
+              <div class="levels-grid" id="campaign-levels-grid">
+                <!-- Populated via JS -->
+              </div>
+            </div>
+
+            <!-- Tab Content 2: Endless Spire -->
+            <div class="levels-tab-pane hidden" id="pane-lvl-endless">
+              <div class="spire-toolbar">
+                <div class="spire-info">
+                  <span class="spire-title">🌀 The Infinite Spire</span>
+                  <span class="spire-subtitle">Procedural realms stretching to infinity with unpredictable mutators, escalating horrors, and ancient relics!</span>
+                </div>
+                <div class="spire-controls">
+                  <button id="btn-spire-highest" class="btn-action secondary-glow" title="Jump to highest unlocked spire level">
+                    🚀 Jump to Highest
+                  </button>
+                  <div class="spire-tier-select-wrap">
+                    <label for="spire-tier-select">Tier:</label>
+                    <select id="spire-tier-select" class="spire-tier-dropdown">
+                      <option value="5">Levels 5 - 14 (Novice Spire)</option>
+                      <option value="15">Levels 15 - 24 (Adept Spire)</option>
+                      <option value="25">Levels 25 - 34 (Master Spire)</option>
+                      <option value="35">Levels 35 - 49 (Torment Spire)</option>
+                      <option value="50">Levels 50 - 74 (Nightmare Spire)</option>
+                      <option value="75">Levels 75 - 100 (Abyssal Spire)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="levels-grid" id="endless-levels-grid">
+                <!-- Populated via JS -->
+              </div>
+            </div>
+
+            <!-- Tab Content 3: Star Milestones -->
+            <div class="levels-tab-pane hidden" id="pane-lvl-milestones">
+              <div class="milestones-header">
+                <p>Earn 3 stars on levels to unlock permanent relics that empower your defenders across all realms!</p>
+              </div>
+              <div class="milestones-list" id="milestones-list">
+                <!-- Populated via JS -->
+              </div>
+            </div>
+
+            <!-- Tab Content 4: Challenge Modifiers -->
+            <div class="levels-tab-pane hidden" id="pane-lvl-challenges">
+              <div class="challenges-header">
+                <p>Activate optional realm curses for higher risk, greater gold bounties, and massive soul rewards!</p>
+              </div>
+              <div class="challenges-list" id="challenges-list">
+                <!-- Populated via JS -->
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-action primary-glow" id="btn-close-levels">RETURN TO SANCTUM</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Level Cleared Modal (Transition to next realm) -->
+      <div id="modal-level-cleared" class="modal-backdrop hidden">
+        <div class="modal-dialog level-victory-dialog">
+          <div class="modal-header">
+            <h2 id="lvl-clear-title">🌟 REALM PURIFIED!</h2>
+          </div>
+          <div class="modal-body">
+            <div class="gameover-illustration">👑</div>
+            <div class="victory-stars" id="victory-stars-display">⭐⭐⭐</div>
+            <p id="lvl-clear-desc">You vanquished the horrors of this domain! The portal to the next realm has opened.</p>
+            <div class="victory-stats-summary" id="victory-stats-summary">
+              <span id="vic-hp-left">❤️ Hearth HP: 100%</span>
+              <span id="vic-souls-gained">+30 👻 Bonus Souls</span>
+            </div>
+            <div class="next-level-preview">
+              <span class="next-lbl">NEXT REALM:</span>
+              <strong id="next-realm-name">Crimson Nethermaw</strong>
+              <span class="next-theme" id="next-realm-theme">(Blood Moon & Molten Caverns)</span>
+              <span class="next-mutator" id="next-realm-mutator">⚡ Swarm Surge</span>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-action secondary-glow" id="btn-vic-open-levels">MAP PORTAL 🗺️</button>
+            <button class="btn-action primary-glow" id="btn-next-realm">ADVANCE TO NEXT REALM ▶</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Instructions Grimoire Modal -->
+      <div id="modal-grimoire" class="modal-backdrop hidden">
+        <div class="modal-dialog">
+          <div class="modal-header">
+            <h2>📜 The Soulwarden's Grimoire</h2>
+            <button class="modal-close" id="modal-grimoire-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <h3>Multiple Realms & Real-Game Systems</h3>
+            <p>
+              Travel through distinct gothic realms with custom environments: 
+              <strong>Gloomstone Graveyard</strong>, <strong>Crimson Nethermaw</strong>, <strong>Frostfall Citadel</strong>, <strong>Alchemist Mire</strong>, and the <strong>Endless Spire</strong>!
+            </p>
+
+            <div class="guide-grid">
+              <div class="guide-item">
+                <span class="guide-icon">🗺️</span>
+                <strong>Endless Spire & Levels:</strong> Explore endless procedural realms from Level 1 to infinity with unique mutators, star rewards, and boss battles!
+              </div>
+              <div class="guide-item">
+                <span class="guide-icon">⚒️</span>
+                <strong>Soul Forge:</strong> Spend collected souls in the Forge for permanent damage, starting gold, and HP mastery upgrades.
+              </div>
+              <div class="guide-item">
+                <span class="guide-icon">📖</span>
+                <strong>Character Codex:</strong> Inspect all friendly defenders and enemy weaknesses, traits, and threat levels.
+              </div>
+              <div class="guide-item">
+                <span class="guide-icon">☀️</span>
+                <strong>Light / Dark Theme:</strong> Toggle between Dark Gothic Midnight and Celestial Dawn Light Mode at any time!
+              </div>
+              <div class="guide-item">
+                <span class="guide-icon">🏆</span>
+                <strong>Quests & Bounties:</strong> Complete objectives to claim bounties of Gold and Souls.
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+            <button class="btn-action secondary-glow" id="btn-reset-progress" title="Clear all saved progress and start from scratch" style="border-color: #ef4444; color: #f87171;">⚠️ RESET PROGRESS</button>
+            <button class="btn-action primary-glow" id="btn-close-guide">CONTINUE BATTLE</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Over Modal -->
+      <div id="modal-gameover" class="modal-backdrop hidden">
+        <div class="modal-dialog gameover-dialog">
+          <div class="modal-header">
+            <h2 id="gameover-title">THE SANCTUM HAS FALLEN</h2>
+          </div>
+          <div class="modal-body">
+            <div class="gameover-illustration" id="gameover-emoji">💀</div>
+            <p id="gameover-desc">The soul flame was extinguished by the night hordes.</p>
+            <div class="gameover-stats">
+              <div class="end-stat">
+                <span class="end-stat-label">Realm Cleared</span>
+                <span class="end-stat-val" id="end-level">Realm 1</span>
+              </div>
+              <div class="end-stat">
+                <span class="end-stat-label">Foes Banished</span>
+                <span class="end-stat-val" id="end-kills">0</span>
+              </div>
+              <div class="end-stat">
+                <span class="end-stat-label">Souls Harvested</span>
+                <span class="end-stat-val" id="end-souls">0</span>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-action secondary-glow" id="btn-fail-levels">🗺️ MAP PORTAL</button>
+            <button class="btn-action primary-glow" id="btn-restart-game">TRY AGAIN</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
